@@ -7,7 +7,20 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+
+    container:
+      image: debian:trixie
 
     steps:
       - name: Checkout repository
@@ -19,8 +32,8 @@ jobs:
       - name: Install dependencies from chkdeps.sh
         run: |
           cd packaging
-          sudo apt-get update
-          sudo apt-get install -y \
+          apt-get update
+          apt-get install -y \
           libgdk-pixbuf-2.0-dev \
           libglib2.0-dev \
           libgtk-3-dev \
@@ -56,5 +69,5 @@ jobs:
       - name: Upload .deb packages as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: built-debs
+          name: built-debs-${{ matrix.arch }}
           path: packaging/output/*.deb
